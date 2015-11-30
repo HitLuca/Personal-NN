@@ -31,7 +31,7 @@ public class NeuralNetwork {
     List<List<DoubleMatrix>> errors;
 
     List<DoubleMatrix> miniBatchErrors;
-    List<DoubleMatrix> miniBatchActivations;
+    List<DoubleMatrix> miniBatchDeltas;
 
     public NeuralNetwork(double learningRate, List<Integer> layerSetup, int miniBatchSize) throws FileNotFoundException, UnsupportedEncodingException {
         this.learningRate = learningRate;
@@ -50,12 +50,14 @@ public class NeuralNetwork {
         totals = new ArrayList<>();
 
         miniBatchErrors = new ArrayList<>();
-        miniBatchActivations = new ArrayList<>();
+        miniBatchDeltas = new ArrayList<>();
 
-        for (int l = 0; l < layerSetup.size(); l++) {
+        for (int l = 0; l < layersNumber; l++) {
             biases.add(new DoubleMatrix().randn(layerSetup.get(l)));
             miniBatchErrors.add(new DoubleMatrix().zeros(layerSetup.get(l)));
-            miniBatchActivations.add(new DoubleMatrix().zeros(layerSetup.get(l)));
+            if (l!=layersNumber-1) {
+                miniBatchDeltas.add(new DoubleMatrix().zeros(layerSetup.get(l+1), layerSetup.get(l)));
+            }
         }
 
         for (int m=0; m<miniBatchSize; m++) {
@@ -85,40 +87,38 @@ public class NeuralNetwork {
             Collections.shuffle(trainDataset);
 
             for (int a = 0; a < trainDataset.size(); a+=miniBatchSize) {
-                if (a%5000==0) {
-                    System.out.println(a);
-                }
-
-                for (int l = 0; l < layerSetup.size(); l++) {
+                for (int l = 0; l < layersNumber; l++) {
                     miniBatchErrors.set(l, new DoubleMatrix().zeros(layerSetup.get(l)));
-                    miniBatchActivations.set(l, new DoubleMatrix().zeros(layerSetup.get(l)));
+                    if (l!=layersNumber-1) {
+                        miniBatchDeltas.set(l, new DoubleMatrix().zeros(layerSetup.get(l+1), layerSetup.get(l)));
+                    }
                 }
 
                 for (int m=0; m<miniBatchSize; m++) {
                     //Setting inputs
-                    for (int i = 0; i < trainDataset.get(a+m).getInputs().size(); i++) {
-                        activations.get(m).set(0, new DoubleMatrix(trainDataset.get(a+m).getInputs()));
-                        miniBatchActivations.set(0, miniBatchActivations.get(0).add(activations.get(m).get(0)));
-                    }
+                    activations.get(m).set(0, new DoubleMatrix(trainDataset.get(a+m).getInputs()));
 
                     //Forward pass
                     for (int l = 1; l < layersNumber; l++) {
                         totals.get(m).set(l, (weights.get(l-1).mmul(activations.get(m).get(l-1))).add(biases.get(l)));
                         activations.get(m).set(l, sigmoid(totals.get(m).get(l)));
-                        miniBatchActivations.set(l, miniBatchActivations.get(l).add(activations.get(m).get(l)));
                     }
 
                     //Output errors
                     errors.get(m).set(layersNumber-1, (activations.get(m).get(layersNumber-1).sub(new DoubleMatrix(trainDataset.get(a+m).getOutputs()))).mul(sigmoidPrime(totals.get(m).get(layersNumber-1))));
                     miniBatchErrors.set(layersNumber-1, miniBatchErrors.get(layersNumber-1).add(errors.get(m).get(layersNumber-1)));
-                    for (int i=0; i<errors.get(m).get(layersNumber-1).rows; i++) {
-                        trainError += Math.pow(activations.get(m).get(layersNumber-1).get(i) - trainDataset.get(a+m).getOutputs().get(i), 2);
+                    for (int i=0; i<activations.get(m).get(layersNumber-1).rows; i++) {
+                        trainError += Math.pow(trainDataset.get(a+m).getOutputs().get(i) - activations.get(m).get(layersNumber-1).get(i), 2);
                     }
 
                     //Backpropagating the error
                     for (int l = layersNumber - 2; l > 0; l--) {
                         errors.get(m).set(l, (weights.get(l).transpose().mmul(errors.get(m).get(l+1))).mul(sigmoidPrime(totals.get(m).get(l))));
                         miniBatchErrors.set(l, miniBatchErrors.get(l).add(errors.get(m).get(l)));
+                    }
+
+                    for (int l=0; l<layersNumber-1; l++) {
+                        miniBatchDeltas.set(l, miniBatchDeltas.get(l).add(errors.get(m).get(l+1).mmul(activations.get(m).get(l).transpose())));
                     }
                 }
 
@@ -129,7 +129,7 @@ public class NeuralNetwork {
 
                 //Updating the weights
                 for (int l = 0; l < weights.size(); l++) {
-                    weights.set(l, weights.get(l).sub((miniBatchErrors.get(l+1).mmul(miniBatchActivations.get(l).transpose()).mul(learningRate/miniBatchSize))));
+                    weights.set(l, weights.get(l).sub(miniBatchDeltas.get(l).mul(learningRate/miniBatchSize)));
                 }
             }
 
@@ -138,9 +138,7 @@ public class NeuralNetwork {
 
             for (int a = 0; a < testDataset.size(); a++) {
                 //Setting inputs
-                for (int i = 0; i < testDataset.get(a).getInputs().size(); i++) {
-                    activations.get(0).set(0, new DoubleMatrix(testDataset.get(a).getInputs()));
-                }
+                activations.get(0).set(0, new DoubleMatrix(testDataset.get(a).getInputs()));
 
                 //Forward pass
                 for (int l = 1; l < layersNumber; l++) {
@@ -150,7 +148,7 @@ public class NeuralNetwork {
 
                 //Output errors
                 for (int i=0; i<errors.get(0).get(layersNumber-1).rows; i++) {
-                    testError += Math.pow(activations.get(0).get(layersNumber-1).get(i) - testDataset.get(a).getOutputs().get(i), 2);
+                    testError += Math.pow(testDataset.get(a).getOutputs().get(i) - activations.get(0).get(layersNumber-1).get(i), 2);
                 }
 
                 //Check result
