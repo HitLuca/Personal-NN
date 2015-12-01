@@ -1,5 +1,7 @@
 import DataImportExport.CSVLoader;
 import NeuralNetwork.*;
+import javafx.util.Pair;
+import org.jblas.DoubleMatrix;
 
 import javax.xml.crypto.Data;
 import java.io.IOException;
@@ -19,27 +21,27 @@ public class Main {
     static double momentum;
     static NeuralNetwork neuralNetwork = null;
 
-    static List<DatasetElement> trainDataset;
-    static List<DatasetElement> testDataset;
-    static List<DatasetElement> validationDataset;
+    static List<Pair<DoubleMatrix, DoubleMatrix>> trainDataset;
+    static List<Pair<DoubleMatrix, DoubleMatrix>> testDataset;
+    static List<Pair<DoubleMatrix, DoubleMatrix>> validationDataset;
 
     public static void main(String[] args) throws IOException, InterruptedException {
         scanner = new Scanner(System.in);
 
         System.out.println("Enter parameters:");
         System.out.print("Epochs: ");
-        epochs = Integer.parseInt(scanner.nextLine());
+        epochs = (int) getUserInput();
         System.out.print("MiniBatchSize: ");
-        miniBatchSize = Integer.parseInt(scanner.nextLine());
+        miniBatchSize = (int) getUserInput();
         System.out.print("LearningRate: ");
-        learningRate = Double.parseDouble(scanner.nextLine());
+        learningRate = getUserInput();
 //        System.out.print("Momentum: ");
 //        momentum = Double.parseDouble(scanner.nextLine());
 
         List<Integer> layerSetup = new ArrayList<>();
         layerSetup.add(784);
         System.out.print("Hidden neurons: ");
-        layerSetup.add(Integer.parseInt(scanner.nextLine()));
+        layerSetup.add((int) getUserInput());
         layerSetup.add(10);
 
         CSVLoader csvLoader = new CSVLoader("data/mnist_train.csv");
@@ -55,5 +57,21 @@ public class Main {
 
         neuralNetwork = new NeuralNetwork(learningRate, layerSetup, miniBatchSize);
         neuralNetwork.epochTrain(trainDataset, validationDataset, testDataset, epochs);
+    }
+
+    private static double getUserInput() {
+        boolean success = false;
+        String s;
+        Double d = null;
+        while(!success) {
+            s = scanner.nextLine();
+            try {
+                d = Double.parseDouble(s);
+                success = true;
+            } catch(Exception e){
+                System.out.println("L'input non è valido");
+            };
+        }
+        return d;
     }
 }

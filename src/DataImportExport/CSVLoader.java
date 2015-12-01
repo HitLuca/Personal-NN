@@ -1,6 +1,8 @@
 package DataImportExport;
 
 import NeuralNetwork.DatasetElement;
+import javafx.util.Pair;
+import org.jblas.DoubleMatrix;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -16,8 +18,8 @@ import java.util.List;
 public class CSVLoader {
     BufferedReader reader;
 
-    List<DatasetElement> dataset;
-    List<DatasetElement> validation;
+    List<Pair<DoubleMatrix, DoubleMatrix>> dataset;
+    List<Pair<DoubleMatrix, DoubleMatrix>> validation;
 
     public CSVLoader(String filename) throws IOException {
         try {
@@ -30,6 +32,7 @@ public class CSVLoader {
     public void importData(boolean b) throws IOException {
         dataset = new ArrayList<>();
         validation = new ArrayList<>();
+
         String string;
         List<String> dataList;
 
@@ -37,26 +40,25 @@ public class CSVLoader {
 
         string = reader.readLine();
         do {
-            if (b == true && k >= 50000) {
-                validation.add(new DatasetElement());
-            } else {
-                dataset.add(new DatasetElement());
+            dataList = Arrays.asList(string.split(","));
+
+            DoubleMatrix output = new DoubleMatrix(10);
+            for (int i = 0; i < 10; i++) {
+                output.put(i, Double.parseDouble(dataList.get(i)));
+            }
+            DoubleMatrix input = new DoubleMatrix(dataList.size()-10);
+            for (int i = 10; i < dataList.size(); i++) {
+                input.put(i-10, Double.parseDouble(dataList.get(i)));
             }
 
-            dataList = Arrays.asList(string.split(","));
-            for (int i = 0; i < 10; i++) {
-                if (b == true && k >= 50000) {
-                    validation.get(k-50000).addOutput(Double.parseDouble(dataList.get(i)));
-                } else {
-                    dataset.get(k).addOutput(Double.parseDouble(dataList.get(i)));
-                }
+            Pair<DoubleMatrix, DoubleMatrix> p = new Pair(input, output);
+
+            if (b==true && k>=50000) {
+                validation.add(p);
             }
-            for (int i = 10; i < dataList.size(); i++) {
-                if (b == true && k >= 50000) {
-                    validation.get(k-50000).addInput(Double.parseDouble(dataList.get(i)));
-                } else {
-                    dataset.get(k).addInput(Double.parseDouble(dataList.get(i)));
-                }
+            else
+            {
+                dataset.add(p);
             }
             k++;
             string = reader.readLine();
@@ -64,11 +66,11 @@ public class CSVLoader {
         reader.close();
     }
 
-    public List<DatasetElement> getDataset() {
+    public List<Pair<DoubleMatrix, DoubleMatrix>> getDataset() {
         return dataset;
     }
 
-    public List<DatasetElement> getValidation() {
+    public List<Pair<DoubleMatrix, DoubleMatrix>> getValidation() {
         return validation;
     }
 }
