@@ -13,17 +13,18 @@ import java.util.Scanner;
  * Created by hitluca on 07/10/15.
  */
 public class Main {
-    static Scanner scanner;
+    private static Scanner scanner;
 
-    static int epochs = 0;
-    static int miniBatchSize = 0;
-    static double learningRate;
-    static double momentum;
-    static NeuralNetwork neuralNetwork = null;
+    private static int epochs = 0;
+    private static int miniBatchSize = 0;
+    private static double learningRate;
+    private static double regularization;
+    private static double momentum;
+    private static NeuralNetwork neuralNetwork = null;
 
-    static List<Pair<DoubleMatrix, DoubleMatrix>> trainDataset;
-    static List<Pair<DoubleMatrix, DoubleMatrix>> testDataset;
-    static List<Pair<DoubleMatrix, DoubleMatrix>> validationDataset;
+    private static List<Pair<DoubleMatrix, DoubleMatrix>> trainDataset;
+    private static List<Pair<DoubleMatrix, DoubleMatrix>> testDataset;
+    private static List<Pair<DoubleMatrix, DoubleMatrix>> validationDataset;
 
     public static void main(String[] args) throws IOException, InterruptedException {
         scanner = new Scanner(System.in);
@@ -35,6 +36,8 @@ public class Main {
         miniBatchSize = (int) getUserInput();
         System.out.print("LearningRate: ");
         learningRate = getUserInput();
+        System.out.print("Regularization: ");
+        regularization = getUserInput();
 //        System.out.print("Momentum: ");
 //        momentum = Double.parseDouble(scanner.nextLine());
 
@@ -55,7 +58,7 @@ public class Main {
         csvLoader.importData(false);
         testDataset = csvLoader.getDataset();
 
-        neuralNetwork = new NeuralNetwork(learningRate, layerSetup, miniBatchSize);
+        neuralNetwork = new NeuralNetwork(learningRate, layerSetup, miniBatchSize, regularization);
         neuralNetwork.epochTrain(trainDataset, validationDataset, testDataset, epochs);
     }
 
