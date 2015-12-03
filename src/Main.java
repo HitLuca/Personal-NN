@@ -30,8 +30,6 @@ public class Main {
         scanner = new Scanner(System.in);
 
         System.out.println("Enter parameters:");
-        System.out.print("Epochs: ");
-        epochs = (int) getUserInput();
         System.out.print("MiniBatchSize: ");
         miniBatchSize = (int) getUserInput();
         System.out.print("LearningRate: ");
@@ -59,7 +57,7 @@ public class Main {
         testDataset = csvLoader.getDataset();
 
         neuralNetwork = new NeuralNetwork(learningRate, layerSetup, miniBatchSize, regularization);
-        neuralNetwork.epochTrain(trainDataset, validationDataset, testDataset, epochs);
+        neuralNetwork.epochTrain(trainDataset, validationDataset, testDataset);
     }
 
     private static double getUserInput() {
