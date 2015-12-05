@@ -1,5 +1,8 @@
 package NeuralNetwork;
 
+import NeuralNetwork.CostFunctions.CostFunction;
+import NeuralNetwork.CostFunctions.CrossEntropy;
+import NeuralNetwork.CostFunctions.MSE;
 import javafx.util.Pair;
 import org.jblas.DoubleMatrix;
 import org.jblas.Solve;
@@ -18,8 +21,7 @@ import static Miscellaneous.NormalizerDenormalizer.normalizeMatrix;
 import static NeuralNetwork.Activations.Logit.logit;
 import static NeuralNetwork.Activations.Sigmoid.sigmoid;
 import static NeuralNetwork.Activations.Sigmoid.sigmoidPrime;
-import static NeuralNetwork.CostFunctions.CrossEntropy.calculateCost;
-import static NeuralNetwork.CostFunctions.CrossEntropy.costDerivative;
+import static NeuralNetwork.CostFunctions.CrossEntropy.*;
 
 /**
  * Created by hitluca on 07/10/15.
@@ -47,7 +49,9 @@ public class NeuralNetwork {
     private double bestEpochAccuracy = 0;
     private double sumWeights;
 
-    public NeuralNetwork(double learningRate, List<Integer> layerSetup, int miniBatchSize, double regularization) throws FileNotFoundException, UnsupportedEncodingException {
+    private CostFunction costFunction;
+
+    public NeuralNetwork(double learningRate, List<Integer> layerSetup, int miniBatchSize, double regularization, int cost) throws FileNotFoundException, UnsupportedEncodingException {
         this.learningRate = learningRate;
         this.initialLearningRate = learningRate;
         this.regularization = regularization;
@@ -55,6 +59,23 @@ public class NeuralNetwork {
         this.miniBatchSize = miniBatchSize;
         this.layerSetup = layerSetup;
 
+        initializeParameters();
+
+        switch (cost) { //0: MSE, 1:CrossEntr
+            case 0: {
+                costFunction = new MSE();
+                break;
+            }
+            case 1: {
+                costFunction = new CrossEntropy();
+                break;
+            }
+        }
+
+        writer = new PrintWriter("output/output.csv", "UTF-8");
+    }
+
+    private void initializeParameters() {
         weightDeltas = new ArrayList<>();
         weights = new ArrayList<>();
 
@@ -79,8 +100,6 @@ public class NeuralNetwork {
             biasDeltas.add(new DoubleMatrix().zeros(layerSetup.get(l)));
             totals.add(new DoubleMatrix().zeros(layerSetup.get(l)));
         }
-
-        writer = new PrintWriter("output/output.csv", "UTF-8");
     }
 
     public void epochTrain(List<Pair<DoubleMatrix, DoubleMatrix>> trainDataset, List<Pair<DoubleMatrix, DoubleMatrix>> validationDataset, List<Pair<DoubleMatrix, DoubleMatrix>> testDataset) throws IOException {
@@ -182,7 +201,7 @@ public class NeuralNetwork {
             activations.set(l, sigmoid(totals.get(l)));
         }
 
-        b_deltas.set(layersNumber - 1, costDerivative(activations.get(layersNumber - 1), input.getValue()));
+        b_deltas.set(layersNumber - 1, costFunction.costDerivative(activations.get(layersNumber - 1), input.getValue(), totals.get(layersNumber-1)));
         biasDeltas.set(layersNumber - 1, biasDeltas.get(layersNumber - 1).add(b_deltas.get(layersNumber - 1)));
 
         for (int l = layersNumber - 2; l > 0; l--) {
@@ -209,13 +228,13 @@ public class NeuralNetwork {
         for (int a = 0; a < input.size(); a++) {
             activations.set(0, input.get(a).getKey());
             feedForward();
-            cost += calculateCost(input.get(a).getValue(), activations.get(layersNumber-1));
+            cost += costFunction.singleCost(input.get(a).getValue(), activations.get(layersNumber-1));
             if (input.get(a).getValue().get(activations.get(layersNumber - 1).argmax()) == 1.0) {
                 success++;
             }
         }
 
-        cost = (-1.0 / input.size())*cost + regularization / (2.0*input.size()) * sumWeights;
+        cost = costFunction.totalCost(cost, input.size()) + regularization / (2.0*input.size()) * sumWeights;
         success = 100.0 * success / input.size();
 
         return new Pair<>(cost, success);

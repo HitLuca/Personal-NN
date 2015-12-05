@@ -58,7 +58,7 @@ public class Main {
         csvLoader.importData(false);
         testDataset = csvLoader.getDataset();
 
-        neuralNetwork = new NeuralNetwork(learningRate, layerSetup, miniBatchSize, regularization);
+        neuralNetwork = new NeuralNetwork(learningRate, layerSetup, miniBatchSize, regularization, 1);
         neuralNetwork.epochTrain(trainDataset, validationDataset, testDataset);
     }
 
