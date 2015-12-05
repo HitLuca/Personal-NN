@@ -3,9 +3,14 @@ package NeuralNetwork;
 import javafx.util.Pair;
 import org.jblas.DoubleMatrix;
 import org.jblas.MatrixFunctions;
+import org.jblas.Solve;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by hitluca on 07/10/15.
@@ -75,8 +80,8 @@ public class NeuralNetwork {
 
         writer.println("Cost on train data, Cost on test data, Cost on validation data, Accuracy on train data, Accuracy on test data, Accuracy on validation data");
 
-        int e =0;
-        while(true) {
+        int e = 0;
+        while (true) {
             System.out.println("Epoch: " + e);
             Collections.shuffle(trainDataset);
 
@@ -107,13 +112,15 @@ public class NeuralNetwork {
             writer.println(trainResults.getKey() + ", " + testResults.getKey() + ", " + validationResults.getKey() + ", " + String.format("%.2f", trainResults.getValue()) + ", " + String.format("%.2f", testResults.getValue()) + ", " + String.format("%.2f", validationResults.getValue()));
             writer.flush();
 
-            e++;
-
             if (earlyStop(validationResults.getValue())) {
                 System.out.println("Early stop!");
                 System.out.println("Best accuracy: " + bestEpochAccuracy);
                 break;
             }
+
+            createImages(e);
+            e++;
+
         }
         writer.close();
     }
@@ -165,10 +172,10 @@ public class NeuralNetwork {
         }
     }
 
-    private double calculateCost(Pair<DoubleMatrix, DoubleMatrix> input) {
+    private double calculateCost(DoubleMatrix input) {
         double total = 0;
         for (int i = 0; i < activations.get(layersNumber - 1).rows; i++) {
-            total += input.getValue().get(i) * Math.log(activations.get(layersNumber - 1).get(i)) + (1 - input.getValue().get(i)) * Math.log(1 - activations.get(layersNumber - 1).get(i));
+            total += input.get(i) * Math.log(activations.get(layersNumber - 1).get(i)) + (1 - input.get(i)) * Math.log(1 - activations.get(layersNumber - 1).get(i));
         }
         return total;
     }
@@ -206,7 +213,7 @@ public class NeuralNetwork {
         for (int a = 0; a < input.size(); a++) {
             activations.set(0, input.get(a).getKey());
             feedForward();
-            cost += calculateCost(input.get(a));
+            cost += calculateCost(input.get(a).getValue());
             int index = activations.get(layersNumber - 1).argmax();
             if (input.get(a).getValue().get(index) == 1.0) {
                 success++;
@@ -221,14 +228,14 @@ public class NeuralNetwork {
             }
         }
 
-        cost = -(1.0 / input.size()) * cost + 0.5 * (regularization / (2 * input.size())) * sumWeights;
+        cost = -1.0*((1.0 / input.size()) * cost) + 0.5 * (regularization / (2 * input.size())) * sumWeights;
         success = (100.0 * success) / input.size();
 
         return new Pair<>(cost, success);
     }
 
     private boolean earlyStop(double success) {
-        if (epochsWithoutImprovement==10) {
+        if (epochsWithoutImprovement == 20) {
             return true;
         }
 
@@ -236,14 +243,13 @@ public class NeuralNetwork {
             bestEpochAccuracy = success;
             epochsWithoutImprovement = 0;
             System.out.println("New best validation accuracy: " + bestEpochAccuracy + "%");
-        }
-        else
-        {
+        } else {
             epochsWithoutImprovement++;
-            if (epochsWithoutImprovement==5) {
-                learningRate /=10;
+            if (epochsWithoutImprovement == 5) {
+                learningRate /= 10;
+                miniBatchSize = 1;
                 epochsWithoutImprovement = 0;
-                if (initialLearningRate/learningRate > 1000) {
+                if (initialLearningRate / learningRate > 1000) {
                     return true;
                 }
                 System.out.println("Lowered learning rate to " + learningRate);
@@ -251,5 +257,86 @@ public class NeuralNetwork {
         }
         System.out.println();
         return false;
+    }
+
+    private void createImages(int epoch) {
+        new File("output/imgs/" + epoch).mkdirs();
+        for (int i = 0; i < 10; i++) {
+            activations.set(layersNumber - 1, classToMatrix(i));
+            feedBackward();
+            createImage(activations.get(0), "output/imgs/" + epoch + "/" + i + ".png");
+        }
+    }
+
+    private void feedBackward() {
+        for (int l=layersNumber-1; l>0; l--) {
+            totals.set(l, logit(activations.get(l)).sub(biases.get(l)));
+            DoubleMatrix x = Solve.solveLeastSquares(weights.get(l-1), totals.get(l));
+            x = normalizeMatrix(x, x.min(), x.max());
+            activations.set(l-1, x);
+        }
+    }
+
+    private void checkMatrix(DoubleMatrix matrix) {
+        for (int i=0; i<matrix.rows; i++) {
+            if (matrix.get(i)<=0) {
+                matrix.put(i, 0.01);
+            } else if (matrix.get(i)>=1) {
+                matrix.put(i, 0.99);
+            }
+        }
+    }
+
+    private DoubleMatrix logit(DoubleMatrix input) {
+        DoubleMatrix a = new DoubleMatrix().ones(input.rows).sub(input);
+        return MatrixFunctions.log(input.div(a));
+    }
+
+    private DoubleMatrix classToMatrix(int c) {
+        DoubleMatrix matrix = new DoubleMatrix(10);
+        for (int i=0; i<10; i++) {
+            matrix.put(i, 0.01);
+        }
+        matrix.put(c, 0.99);
+        return matrix;
+    }
+
+    private void createImage(DoubleMatrix pixels, String filename) {
+        BufferedImage bufferedImage = new BufferedImage(28, 28, BufferedImage.TYPE_INT_RGB);
+        for (int i = 0; i < 28; i++) {
+            for (int j = 0; j < 28; j++) {
+                int denormalized = (int) denormalize(pixels.get(i*28+j), 0, 255);
+                int rgb = 255 - denormalized << 16 | 255 - denormalized << 8 | 255 - denormalized;
+                bufferedImage.setRGB(i, j, rgb);
+            }
+        }
+        File outputfile = new File(filename);
+        try {
+            ImageIO.write(bufferedImage, "png", outputfile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private double denormalize(double d, double min, double max) {
+        return (int) (d*(max - min) + min);
+    }
+
+    private double normalize(double d, double min, double max) {
+        return (d-min)/(max-min);
+    }
+
+    private DoubleMatrix normalizeMatrix(DoubleMatrix oldMatrix, double min, double max) {
+        if (oldMatrix.rows==1) {
+            return oldMatrix.put(0, 0.5);
+        }
+
+        DoubleMatrix result = new DoubleMatrix(oldMatrix.rows);
+        for (int i = 0; i < oldMatrix.rows; i++) {
+            result.put(i, normalize(oldMatrix.get(i), min, max));
+        }
+        result.put(result.argmin(), 0.01);
+        result.put(result.argmax(), 0.99);
+        return result;
     }
 }

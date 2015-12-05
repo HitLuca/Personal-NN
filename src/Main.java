@@ -42,7 +42,10 @@ public class Main {
         List<Integer> layerSetup = new ArrayList<>();
         layerSetup.add(784);
         System.out.print("Hidden neurons: ");
-        layerSetup.add((int) getUserInput());
+        int i= (int) getUserInput();
+        if (i!=0) {
+            layerSetup.add(i);
+        }
         layerSetup.add(10);
 
         CSVLoader csvLoader = new CSVLoader("data/mnist_train.csv");
