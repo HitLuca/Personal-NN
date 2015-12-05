@@ -19,7 +19,7 @@ public class NeuralNetwork {
     private double learningRate;
     private double initialLearningRate;
     private double regularization;
-    private int miniBatchSize;
+    private double miniBatchSize;
     private int layersNumber;
     private List<Integer> layerSetup;
 
@@ -89,10 +89,10 @@ public class NeuralNetwork {
                 updateMiniBatch(trainDataset, trainDataset.size());
             } else {
                 for (int a = 0; a < trainDataset.size(); a += miniBatchSize) {
-                    updateMiniBatch(trainDataset.subList(a, a + miniBatchSize), trainDataset.size());
+                    updateMiniBatch(trainDataset.subList(a, a + (int)miniBatchSize), trainDataset.size());
                 }
                 if (trainDataset.size() % miniBatchSize != 0) {
-                    updateMiniBatch(trainDataset.subList(trainDataset.size() - trainDataset.size() % miniBatchSize, trainDataset.size()), trainDataset.size());
+                    updateMiniBatch(trainDataset.subList(trainDataset.size() - trainDataset.size() % (int)miniBatchSize, trainDataset.size()), trainDataset.size());
                 }
             }
 
@@ -137,7 +137,7 @@ public class NeuralNetwork {
         }
 
         for (int l = 0; l < weights.size(); l++) {
-            weights.set(l, (weights.get(l).mul(1.0 - ((learningRate * regularization) / n))).sub(weightDeltas.get(l).mul(learningRate / miniBatchSize)));
+            weights.set(l, (weights.get(l).mul(1.0 - (learningRate * regularization / n))).sub(weightDeltas.get(l).mul(learningRate / miniBatchSize)));
         }
 
         for (int l = 0; l < biases.size(); l++) {
@@ -228,7 +228,7 @@ public class NeuralNetwork {
             }
         }
 
-        cost = -1.0*((1.0 / input.size()) * cost) + 0.5 * (regularization / (2 * input.size())) * sumWeights;
+        cost = (-1.0 / input.size())*cost + 0.5 * (regularization / input.size()) * sumWeights;
         success = (100.0 * success) / input.size();
 
         return new Pair<>(cost, success);
@@ -274,16 +274,6 @@ public class NeuralNetwork {
             DoubleMatrix x = Solve.solveLeastSquares(weights.get(l-1), totals.get(l));
             x = normalizeMatrix(x, x.min(), x.max());
             activations.set(l-1, x);
-        }
-    }
-
-    private void checkMatrix(DoubleMatrix matrix) {
-        for (int i=0; i<matrix.rows; i++) {
-            if (matrix.get(i)<=0) {
-                matrix.put(i, 0.01);
-            } else if (matrix.get(i)>=1) {
-                matrix.put(i, 0.99);
-            }
         }
     }
 
