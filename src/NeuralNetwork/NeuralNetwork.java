@@ -67,6 +67,7 @@ public class NeuralNetwork {
             double deviation = 1.0 / Math.sqrt(weights.get(l).columns);
             weights.set(l, weights.get(l).mul(deviation));
         }
+        System.out.println();
 
         biases = new ArrayList<>();
         biasDeltas = new ArrayList<>();
