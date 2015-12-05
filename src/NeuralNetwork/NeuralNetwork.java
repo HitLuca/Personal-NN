@@ -2,7 +2,6 @@ package NeuralNetwork;
 
 import javafx.util.Pair;
 import org.jblas.DoubleMatrix;
-import org.jblas.MatrixFunctions;
 import org.jblas.Solve;
 
 import javax.imageio.ImageIO;
@@ -12,6 +11,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static Miscellaneous.MiscFunctions.classToMatrix;
+import static Miscellaneous.MiscFunctions.createImage;
+import static Miscellaneous.NormalizerDenormalizer.denormalize;
+import static Miscellaneous.NormalizerDenormalizer.normalizeMatrix;
+import static NeuralNetwork.Activations.Logit.logit;
+import static NeuralNetwork.Activations.Sigmoid.sigmoid;
+import static NeuralNetwork.Activations.Sigmoid.sigmoidPrime;
+import static NeuralNetwork.CostFunctions.CrossEntropy.calculateCost;
+import static NeuralNetwork.CostFunctions.CrossEntropy.costDerivative;
+
 /**
  * Created by hitluca on 07/10/15.
  */
@@ -19,7 +28,7 @@ public class NeuralNetwork {
     private double learningRate;
     private double initialLearningRate;
     private double regularization;
-    private double miniBatchSize;
+    private int miniBatchSize;
     private int layersNumber;
     private List<Integer> layerSetup;
 
@@ -36,6 +45,7 @@ public class NeuralNetwork {
 
     private int epochsWithoutImprovement = 0;
     private double bestEpochAccuracy = 0;
+    private double sumWeights;
 
     public NeuralNetwork(double learningRate, List<Integer> layerSetup, int miniBatchSize, double regularization) throws FileNotFoundException, UnsupportedEncodingException {
         this.learningRate = learningRate;
@@ -89,12 +99,14 @@ public class NeuralNetwork {
                 updateMiniBatch(trainDataset, trainDataset.size());
             } else {
                 for (int a = 0; a < trainDataset.size(); a += miniBatchSize) {
-                    updateMiniBatch(trainDataset.subList(a, a + (int)miniBatchSize), trainDataset.size());
+                    updateMiniBatch(trainDataset.subList(a, a + miniBatchSize), trainDataset.size());
                 }
                 if (trainDataset.size() % miniBatchSize != 0) {
-                    updateMiniBatch(trainDataset.subList(trainDataset.size() - trainDataset.size() % (int)miniBatchSize, trainDataset.size()), trainDataset.size());
+                    updateMiniBatch(trainDataset.subList(trainDataset.size() - (trainDataset.size() % miniBatchSize), trainDataset.size()), trainDataset.size());
                 }
             }
+
+            calculatesumWeights();
 
             trainResults = evaluate(trainDataset);
             testResults = evaluate(testDataset);
@@ -118,11 +130,22 @@ public class NeuralNetwork {
                 break;
             }
 
-            createImages(e);
+            //createImages(e);
             e++;
 
         }
         writer.close();
+    }
+
+    private void calculatesumWeights() {
+        sumWeights = 0;
+        for (int l = 0; l < weights.size(); l++) {
+            for (int i = 0; i < weights.get(l).rows; i++) {
+                for (int j = 0; j < weights.get(l).columns; j++) {
+                    sumWeights += Math.pow(weights.get(l).get(i, j), 2);
+                }
+            }
+        }
     }
 
     private void updateMiniBatch(List<Pair<DoubleMatrix, DoubleMatrix>> dataset, int n) {
@@ -172,14 +195,6 @@ public class NeuralNetwork {
         }
     }
 
-    private double calculateCost(DoubleMatrix input) {
-        double total = 0;
-        for (int i = 0; i < activations.get(layersNumber - 1).rows; i++) {
-            total += input.get(i) * Math.log(activations.get(layersNumber - 1).get(i)) + (1 - input.get(i)) * Math.log(1 - activations.get(layersNumber - 1).get(i));
-        }
-        return total;
-    }
-
     private void feedForward() {
         for (int l = 1; l < layersNumber; l++) {
             totals.set(l, (weights.get(l - 1).mmul(activations.get(l - 1))).add(biases.get(l)));
@@ -187,49 +202,21 @@ public class NeuralNetwork {
         }
     }
 
-    private DoubleMatrix costDerivative(DoubleMatrix activations, DoubleMatrix output) {
-        return activations.sub(output);
-    }
-
-    private DoubleMatrix sigmoid(DoubleMatrix input) {
-        DoubleMatrix result = new DoubleMatrix().copy(input);
-        DoubleMatrix ones = DoubleMatrix.ones(result.rows, result.columns);
-        result.muli(-1);
-        MatrixFunctions.expi(result);
-        result.addi(1);
-        return ones.divi(result);
-    }
-
-    private DoubleMatrix sigmoidPrime(DoubleMatrix input) {
-        DoubleMatrix ones = DoubleMatrix.ones(input.rows, input.columns);
-        return sigmoid(input).mul(ones.sub(sigmoid(input)));
-    }
-
     private Pair<Double, Double> evaluate(List<Pair<DoubleMatrix, DoubleMatrix>> input) {
         double success = 0;
         double cost = 0;
-        double sumWeights = 0;
 
         for (int a = 0; a < input.size(); a++) {
             activations.set(0, input.get(a).getKey());
             feedForward();
-            cost += calculateCost(input.get(a).getValue());
-            int index = activations.get(layersNumber - 1).argmax();
-            if (input.get(a).getValue().get(index) == 1.0) {
+            cost += calculateCost(input.get(a).getValue(), activations.get(layersNumber-1));
+            if (input.get(a).getValue().get(activations.get(layersNumber - 1).argmax()) == 1.0) {
                 success++;
             }
         }
 
-        for (int l = 0; l < weights.size(); l++) {
-            for (int i = 0; i < weights.get(l).rows; i++) {
-                for (int j = 0; j < weights.get(l).columns; j++) {
-                    sumWeights += Math.pow(weights.get(l).get(i, j), 2);
-                }
-            }
-        }
-
-        cost = (-1.0 / input.size())*cost + 0.5 * (regularization / input.size()) * sumWeights;
-        success = (100.0 * success) / input.size();
+        cost = (-1.0 / input.size())*cost + regularization / (2.0*input.size()) * sumWeights;
+        success = 100.0 * success / input.size();
 
         return new Pair<>(cost, success);
     }
@@ -242,7 +229,6 @@ public class NeuralNetwork {
         if (success > bestEpochAccuracy) {
             bestEpochAccuracy = success;
             epochsWithoutImprovement = 0;
-            System.out.println("New best validation accuracy: " + bestEpochAccuracy + "%");
         } else {
             epochsWithoutImprovement++;
             if (epochsWithoutImprovement == 5) {
@@ -252,7 +238,6 @@ public class NeuralNetwork {
                 if (initialLearningRate / learningRate > 1000) {
                     return true;
                 }
-                System.out.println("Lowered learning rate to " + learningRate);
             }
         }
         System.out.println();
@@ -262,7 +247,7 @@ public class NeuralNetwork {
     private void createImages(int epoch) {
         new File("output/imgs/" + epoch).mkdirs();
         for (int i = 0; i < 10; i++) {
-            activations.set(layersNumber - 1, classToMatrix(i));
+            activations.set(layersNumber - 1, classToMatrix(i, 10));
             feedBackward();
             createImage(activations.get(0), "output/imgs/" + epoch + "/" + i + ".png");
         }
@@ -273,60 +258,9 @@ public class NeuralNetwork {
             totals.set(l, logit(activations.get(l)).sub(biases.get(l)));
             DoubleMatrix x = Solve.solveLeastSquares(weights.get(l-1), totals.get(l));
             x = normalizeMatrix(x, x.min(), x.max());
+            x.put(x.argmin(), 0.01);
+            x.put(x.argmax(), 0.99);
             activations.set(l-1, x);
         }
-    }
-
-    private DoubleMatrix logit(DoubleMatrix input) {
-        DoubleMatrix a = new DoubleMatrix().ones(input.rows).sub(input);
-        return MatrixFunctions.log(input.div(a));
-    }
-
-    private DoubleMatrix classToMatrix(int c) {
-        DoubleMatrix matrix = new DoubleMatrix(10);
-        for (int i=0; i<10; i++) {
-            matrix.put(i, 0.01);
-        }
-        matrix.put(c, 0.99);
-        return matrix;
-    }
-
-    private void createImage(DoubleMatrix pixels, String filename) {
-        BufferedImage bufferedImage = new BufferedImage(28, 28, BufferedImage.TYPE_INT_RGB);
-        for (int i = 0; i < 28; i++) {
-            for (int j = 0; j < 28; j++) {
-                int denormalized = (int) denormalize(pixels.get(i*28+j), 0, 255);
-                int rgb = 255 - denormalized << 16 | 255 - denormalized << 8 | 255 - denormalized;
-                bufferedImage.setRGB(i, j, rgb);
-            }
-        }
-        File outputfile = new File(filename);
-        try {
-            ImageIO.write(bufferedImage, "png", outputfile);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private double denormalize(double d, double min, double max) {
-        return (int) (d*(max - min) + min);
-    }
-
-    private double normalize(double d, double min, double max) {
-        return (d-min)/(max-min);
-    }
-
-    private DoubleMatrix normalizeMatrix(DoubleMatrix oldMatrix, double min, double max) {
-        if (oldMatrix.rows==1) {
-            return oldMatrix.put(0, 0.5);
-        }
-
-        DoubleMatrix result = new DoubleMatrix(oldMatrix.rows);
-        for (int i = 0; i < oldMatrix.rows; i++) {
-            result.put(i, normalize(oldMatrix.get(i), min, max));
-        }
-        result.put(result.argmin(), 0.01);
-        result.put(result.argmax(), 0.99);
-        return result;
     }
 }

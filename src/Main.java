@@ -1,9 +1,8 @@
-import DataImportExport.CSVLoader;
+import Miscellaneous.CSVLoader;
 import NeuralNetwork.*;
 import javafx.util.Pair;
 import org.jblas.DoubleMatrix;
 
-import javax.xml.crypto.Data;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
