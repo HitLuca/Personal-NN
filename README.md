@@ -76,4 +76,4 @@ Feel free to modify and redistribute it, but please add a mention to the origina
 ## Kitty
 This is a necessary addition
 
--![alt text](http://3.bp.blogspot.com/-zMhJsRHNkX4/T9EffvGPDQI/AAAAAAAAC2A/dIoHZ8rHO14/s400/cat-yawn-gif.gif "Kitty is so sleepy he won't go away from the file")
+![alt text](http://3.bp.blogspot.com/-zMhJsRHNkX4/T9EffvGPDQI/AAAAAAAAC2A/dIoHZ8rHO14/s400/cat-yawn-gif.gif "Kitty is so sleepy he won't go away from the file")
