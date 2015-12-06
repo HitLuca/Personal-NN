@@ -28,7 +28,6 @@ import static NeuralNetwork.CostFunctions.CrossEntropy.*;
  */
 public class NeuralNetwork {
     private double learningRate;
-    private double initialLearningRate;
     private double regularization;
     private int miniBatchSize;
     private int layersNumber;
@@ -46,14 +45,13 @@ public class NeuralNetwork {
     private PrintWriter writer;
 
     private int epochsWithoutImprovement = 0;
-    private double bestEpochAccuracy = 0;
+    private double bestEpochCost = Integer.MAX_VALUE;
     private double sumWeights;
 
     private CostFunction costFunction;
 
     public NeuralNetwork(double learningRate, List<Integer> layerSetup, int miniBatchSize, double regularization, int cost) throws FileNotFoundException, UnsupportedEncodingException {
         this.learningRate = learningRate;
-        this.initialLearningRate = learningRate;
         this.regularization = regularization;
         this.layersNumber = layerSetup.size();
         this.miniBatchSize = miniBatchSize;
@@ -118,11 +116,12 @@ public class NeuralNetwork {
             if (trainDataset.size() < miniBatchSize) {
                 updateMiniBatch(trainDataset, trainDataset.size());
             } else {
-                for (int a = 0; a < trainDataset.size(); a += miniBatchSize) {
+                int a;
+                for (a = 0; a < trainDataset.size()-miniBatchSize; a += miniBatchSize) {
                     updateMiniBatch(trainDataset.subList(a, a + miniBatchSize), trainDataset.size());
                 }
                 if (trainDataset.size() % miniBatchSize != 0) {
-                    updateMiniBatch(trainDataset.subList(trainDataset.size() - (trainDataset.size() % miniBatchSize), trainDataset.size()), trainDataset.size());
+                    updateMiniBatch(trainDataset.subList(a, trainDataset.size()), trainDataset.size());
                 }
             }
 
@@ -144,9 +143,9 @@ public class NeuralNetwork {
             writer.println(trainResults.getKey() + ", " + testResults.getKey() + ", " + validationResults.getKey() + ", " + String.format("%.2f", trainResults.getValue()) + ", " + String.format("%.2f", testResults.getValue()) + ", " + String.format("%.2f", validationResults.getValue()));
             writer.flush();
 
-            if (earlyStop(validationResults.getValue())) {
+            if (earlyStop(validationResults.getKey())) {
                 System.out.println("Early stop!");
-                System.out.println("Best accuracy: " + bestEpochAccuracy);
+                System.out.println("Best cost: " + bestEpochCost);
                 break;
             }
 
@@ -175,7 +174,7 @@ public class NeuralNetwork {
         }
         biasDeltas.set(layersNumber - 1, new DoubleMatrix().zeros(layerSetup.get(layersNumber - 1)));
 
-        for (int m = 0; m < miniBatchSize; m++) {
+        for (int m = 0; m < dataset.size(); m++) {
             backPropagation(dataset.get(m));
         }
 
@@ -241,42 +240,38 @@ public class NeuralNetwork {
         return new Pair<>(cost, success);
     }
 
-    private boolean earlyStop(double success) {
-        if (epochsWithoutImprovement == 20) {
+    private boolean earlyStop(double cost) {
+        if (epochsWithoutImprovement == 10) {
             return true;
         }
 
-        if (success > bestEpochAccuracy) {
-            bestEpochAccuracy = success;
+        if (cost < bestEpochCost) {
+            bestEpochCost = cost;
             epochsWithoutImprovement = 0;
+            learningRate *= 1.1;
         } else {
             epochsWithoutImprovement++;
-            if (epochsWithoutImprovement == 5) {
-                learningRate /= 10;
-                miniBatchSize = 1;
-                epochsWithoutImprovement = 0;
-                if (initialLearningRate / learningRate > 1000) {
-                    return true;
-                }
-            }
+            learningRate *= 0.5;
         }
-        System.out.println();
         return false;
     }
 
     private void createImages(int epoch) {
-        new File("output/imgs/" + epoch).mkdirs();
+        new File("output/imgs/epoch_" + epoch).mkdirs();
         for (int i = 0; i < 10; i++) {
             activations.set(layersNumber - 1, classToMatrix(i, 10));
             feedBackward();
-            createImage(activations.get(0), "output/imgs/" + epoch + "/" + i + ".png");
+            for (int j=0; j<activations.size()-1; j++) {
+                new File("output/imgs/epoch_" + epoch + "/layer_" + j).mkdirs();
+                createImage(activations.get(j), "output/imgs/epoch_" + epoch + "/layer_" + j + "/class_" + i + ".png");
+            }
         }
     }
 
     private void feedBackward() {
         for (int l=layersNumber-1; l>0; l--) {
             totals.set(l, logit(activations.get(l)).sub(biases.get(l)));
-            DoubleMatrix x = Solve.solveLeastSquares(weights.get(l-1), totals.get(l));
+            DoubleMatrix x = (weights.get(l-1).transpose()).mmul(totals.get(l));
             x = normalizeMatrix(x, x.min(), x.max());
             x.put(x.argmin(), 0.01);
             x.put(x.argmax(), 0.99);

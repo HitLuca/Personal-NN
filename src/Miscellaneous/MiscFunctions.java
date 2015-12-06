@@ -23,10 +23,22 @@ public class MiscFunctions {
     }
 
     public static void createImage(DoubleMatrix pixels, String filename) {
-        BufferedImage bufferedImage = new BufferedImage(28, 28, BufferedImage.TYPE_INT_RGB);
-        for (int i = 0; i < 28; i++) {
-            for (int j = 0; j < 28; j++) {
-                int denormalized = (int) denormalize(pixels.get(i*28+j), 0, 255);
+        int dimension1 = 0;
+        int dimension2 = 0;
+        if (Math.sqrt(pixels.rows)%1==0) {
+            dimension1 = (int) Math.sqrt(pixels.rows);
+            dimension2 = dimension1;
+        }
+        else
+        {
+            dimension1 = (int) Math.sqrt(pixels.rows);
+            dimension2 = pixels.rows/dimension1;
+        }
+
+        BufferedImage bufferedImage = new BufferedImage(dimension1, dimension2, BufferedImage.TYPE_INT_RGB);
+        for (int i = 0; i < dimension1; i++) {
+            for (int j = 0; j < dimension2; j++) {
+                int denormalized = (int) denormalize(pixels.get(i*dimension1+j), 0, 255);
                 int rgb = 255 - denormalized << 16 | 255 - denormalized << 8 | 255 - denormalized;
                 bufferedImage.setRGB(i, j, rgb);
             }

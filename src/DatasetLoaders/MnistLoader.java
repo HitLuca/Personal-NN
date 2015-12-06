@@ -1,4 +1,4 @@
-package Miscellaneous;
+package DatasetLoaders;
 
 import javafx.util.Pair;
 import org.jblas.DoubleMatrix;
@@ -14,13 +14,13 @@ import java.util.List;
 /**
  * Created by hitluca on 08/10/15.
  */
-public class CSVLoader {
+public class MnistLoader implements Loader{
     BufferedReader reader;
 
-    List<Pair<DoubleMatrix, DoubleMatrix>> dataset;
+    List<Pair<DoubleMatrix, DoubleMatrix>> train;
     List<Pair<DoubleMatrix, DoubleMatrix>> validation;
 
-    public CSVLoader(String filename) throws IOException {
+    public MnistLoader(String filename) throws IOException {
         try {
             reader = new BufferedReader(new InputStreamReader(new FileInputStream(filename)));
         } catch (Exception e) {
@@ -29,7 +29,7 @@ public class CSVLoader {
     }
 
     public void importData(boolean b) throws IOException {
-        dataset = new ArrayList<>();
+        train = new ArrayList<>();
         validation = new ArrayList<>();
 
         String string;
@@ -51,25 +51,28 @@ public class CSVLoader {
             }
 
             Pair<DoubleMatrix, DoubleMatrix> p = new Pair(input, output);
-
             if (b==true && k>=50000) {
                 validation.add(p);
             }
             else
             {
-                dataset.add(p);
+                train.add(p);
             }
             k++;
             string = reader.readLine();
-        } while (string != null);
+        } while (string != null || !string.equals(""));
         reader.close();
     }
 
-    public List<Pair<DoubleMatrix, DoubleMatrix>> getDataset() {
-        return dataset;
+    public List<Pair<DoubleMatrix, DoubleMatrix>> getTrain() {
+        return train;
     }
 
     public List<Pair<DoubleMatrix, DoubleMatrix>> getValidation() {
         return validation;
+    }
+
+    public List<Pair<DoubleMatrix, DoubleMatrix>> getTest() {
+        return train;
     }
 }
