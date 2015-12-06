@@ -49,7 +49,7 @@ First, create all the missing folders until you get this configuration:
         - mnist/ (if used)
         - adult/ (if used)
     - lib/ (here you will have to put the jblas library)
-        - jblas-1.2.3.jar YOU HAVE TO DOWNLOAD THIS OR IT WILL NOT WORK
+        - [jblas-1.2.3.jar] (http://jblas.org/) you have to download this as it's used in the project
     - output/
         - imgs/
     - src/
@@ -72,3 +72,8 @@ I am working alone on this project, will add contributors as needed. If you want
 ## License
 This software is under the [MITLicense] (https://opensource.org/licenses/MIT)
 Feel free to modify and redistribute it, but please add a mention to the original code.
+
+## Kitty
+This is a necessary addition
+
+-![alt text](http://3.bp.blogspot.com/-zMhJsRHNkX4/T9EffvGPDQI/AAAAAAAAC2A/dIoHZ8rHO14/s400/cat-yawn-gif.gif "Kitty is so sleepy he won't go away from the file")
