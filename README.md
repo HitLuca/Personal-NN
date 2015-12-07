@@ -3,7 +3,7 @@
 ## Introduction
 This is a simple implementation of a feedforward neural network, created during spare time, and without the presumption to reach the accuracies of the well known libraries built especially for this purpose.  
 
-Tje project is called BackPropNNv2, and as you may think it is a successor of my past BackPropNN. Now it has been deleted as this is far superior both in accuracy and efficiency (with BackPropNN i had to use a friend's pc to work with the full Mnist dataset).
+The project is called BackPropNNv2, and as you may think it is a successor of my past BackPropNN. Now it has been deleted as this is far superior both in accuracy and efficiency (with BackPropNN i had to use a friend's pc to work with the full Mnist dataset).
 
 For now it has to be used from the command line, until i decide to create a decent UI.
 
@@ -60,7 +60,7 @@ With the mnist dataset there are a little things todo, and I plan to remove this
 After this you are good to go.
 
 ## API Reference
-Currently I haven't written any API reference, as for now it's pretty easy to use. Will ad as needed
+Currently I haven't written any API reference, as for now it's pretty easy to use. Will ad as needed.
 
 ## Tests
 Currently no test is needed.

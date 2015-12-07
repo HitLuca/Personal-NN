@@ -59,8 +59,11 @@ public class MnistLoader implements Loader{
                 train.add(p);
             }
             k++;
+            if (k==10) {
+                break;
+            }
             string = reader.readLine();
-        } while (string != null || !string.equals(""));
+        } while (string != null && !string.equals(""));
         reader.close();
     }
 
