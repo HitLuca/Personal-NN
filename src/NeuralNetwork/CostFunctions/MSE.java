@@ -1,9 +1,8 @@
 package NeuralNetwork.CostFunctions;
 
+import NeuralNetwork.Activations.ActivationFunction;
 import org.jblas.DoubleMatrix;
 import org.jblas.MatrixFunctions;
-
-import static NeuralNetwork.Activations.Sigmoid.sigmoidPrime;
 
 /**
  * Created by hitluca on 05/12/15.
@@ -17,7 +16,7 @@ public class MSE implements CostFunction{
         return 1.0 / (2*n) * cost;
     }
 
-    public DoubleMatrix costDerivative(DoubleMatrix activations, DoubleMatrix output, DoubleMatrix totals) {
-        return activations.sub(output).mul(sigmoidPrime(totals));
+    public DoubleMatrix costDerivative(DoubleMatrix activations, DoubleMatrix output, DoubleMatrix totals, ActivationFunction activation) {
+        return activations.sub(output).mul(activation.primeDerivative(totals));
     }
 }

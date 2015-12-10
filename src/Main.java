@@ -38,6 +38,14 @@ public class Main {
         int choice = (int) getUserInput();
         switch (choice) {
             case 1: {
+                layerSetup.add(784);
+                System.out.print("Hidden neurons: ");
+                int i= (int) getUserInput();
+                if (i!=0) {
+                    layerSetup.add(i);
+                }
+                layerSetup.add(10);
+
                 MnistLoader MnistLoader = new MnistLoader("data/mnist/mnist_train.csv");
                 System.out.println("Importing train and validation data...");
                 MnistLoader.importData(true);
@@ -48,19 +56,23 @@ public class Main {
                 System.out.println("Importing test data...");
                 MnistLoader.importData(false);
                 testDataset = MnistLoader.getTest();
-                layerSetup.add(784);
-                layerSetup.add(10);
                 break;
             }
             case 2: {
+                layerSetup.add(4);
+                System.out.print("Hidden neurons: ");
+                int i= (int) getUserInput();
+                if (i!=0) {
+                    layerSetup.add(i);
+                }
+                layerSetup.add(3);
+
                 IrisLoader irisLoader = new IrisLoader("data/iris/iris.data");
                 System.out.println("Importing data...");
                 irisLoader.importData(true);
                 trainDataset = irisLoader.getTrain();
                 validationDataset = irisLoader.getValidation();
                 testDataset = irisLoader.getTest();
-                layerSetup.add(4);
-                layerSetup.add(3);
                 break;
             }
             default: {
@@ -68,14 +80,8 @@ public class Main {
             }
         }
 
-        System.out.print("Hidden neurons: ");
-        int i= (int) getUserInput();
-        if (i!=0) {
-            layerSetup.add(1, i);
-        }
-
-        NeuralNetwork neuralNetwork = new NeuralNetwork(learningRate, layerSetup, miniBatchSize, regularization, 1);
-        neuralNetwork.epochTrain(trainDataset, validationDataset, testDataset);
+        NeuralNetwork neuralNetwork = new NeuralNetwork(learningRate, layerSetup, miniBatchSize, regularization, 1, true);
+        neuralNetwork.epochTrain(trainDataset, validationDataset, testDataset, true, true, true);
     }
 
     private static double getUserInput() {
