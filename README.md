@@ -59,6 +59,8 @@ Now you have to add your dataset in the right folder.
 With the mnist dataset there are a little things todo, and I plan to remove this part doing it on the loader: instead of the official mnist dataset you have to download the [csv version] (http://pjreddie.com/projects/mnist-in-csv/) and do some work at it. You need to load it up and normalize all it's values between 0 and 255 (i know, sorry), then save it to mnist_train.csv and mnist_test.csv.  
 After this you are good to go.
 
+[UPDATE] I have now added the two mnist datasets on my Google Drive folder, so you don't have to do all the mess mentioned above. Simply download the files listed [here] (https://drive.google.com/folderview?id=0B3ln413PhHWDeGhmRXJHWGV3UkE&usp=sharing) and move them inside the mnist folder.
+
 ## API Reference
 Currently I haven't written any API reference, as for now it's pretty easy to use. Will ad as needed.
 
