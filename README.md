@@ -30,10 +30,10 @@ This project has been divided into various modules to be as easy to understand a
         Here you can find all the cost functions I have implemented, so yuo can choose your favourite.  I fixed the CrossEntropy function as active, for it's ability to avoid neuron saturation for the most times.  
         There is also another interface so you can see what to implement on your own.
         
-    - [NeuralNetwork.java] (https://github.com/HitLuca/BackPropNeuralNetwork/blob/master/src/NeuralNetwork/NeuralNetwork.java)
+    - [NeuralNetwork.java](https://github.com/HitLuca/BackPropNeuralNetwork/blob/master/src/NeuralNetwork/NeuralNetwork.java)
         The main class, it has all the needed methods in the most easily readable way possible, but in case it needs some retouches just let me know.
     
-- [Main.java] (https://github.com/HitLuca/BackPropNeuralNetwork/blob/master/src/Main.java)
+- [Main.java](https://github.com/HitLuca/BackPropNeuralNetwork/blob/master/src/Main.java)
     The wrapper, here you input all the parameters and import the desired database. I actually hate this so I plan to modify it as soon as I can.
     
 ## Motivation
@@ -56,10 +56,10 @@ First, create all the missing folders until you get this configuration:
         - Modules ecc.
        
 Now you have to add your dataset in the right folder.  
-With the mnist dataset there are a little things todo, and I plan to remove this part doing it on the loader: instead of the official mnist dataset you have to download the [csv version] (http://pjreddie.com/projects/mnist-in-csv/) and do some work at it. You need to load it up and normalize all it's values between 0 and 255 (i know, sorry), then save it to mnist_train.csv and mnist_test.csv.  
+With the mnist dataset there are a little things todo, and I plan to remove this part doing it on the loader: instead of the official mnist dataset you have to download the [csv version](http://pjreddie.com/projects/mnist-in-csv/) and do some work at it. You need to load it up and normalize all it's values between 0 and 255 (i know, sorry), then save it to mnist_train.csv and mnist_test.csv.  
 After this you are good to go.
 
-[UPDATE] I have now added the two mnist datasets on my Google Drive folder, so you don't have to do all the mess mentioned above. Simply download the files listed [here] (https://drive.google.com/folderview?id=0B3ln413PhHWDeGhmRXJHWGV3UkE&usp=sharing) and move them inside the mnist folder.
+[UPDATE] I have now added the two mnist datasets on my Google Drive folder, so you don't have to do all the mess mentioned above. Simply download the files listed [here](https://drive.google.com/folderview?id=0B3ln413PhHWDeGhmRXJHWGV3UkE&usp=sharing) and move them inside the mnist folder.
 
 ## API Reference
 Currently I haven't written any API reference, as for now it's pretty easy to use. Will ad as needed.
@@ -74,16 +74,16 @@ As I said earlier, this software doesn't want to replace the more complex librar
 - Iris dataset: I tried only once so it's a bit of a joke run. By the way the accuracy went up to ~95% on the test data.
 
 ## References 
-I created this project while reading the wonderful [Michael A. Nielsen, "Neural Networks and Deep Learning", Determination Press, 2015] (http://neuralnetworksanddeeplearning.com/index.html),
+I created this project while reading the wonderful [Michael A. Nielsen, "Neural Networks and Deep Learning", Determination Press, 2015](http://neuralnetworksanddeeplearning.com/index.html),
 accompained by various papers and online documentation.  
-Aside from them, I also have read the machine learning chapters in [The LION Way: Learning plus Intelligent Optimization] (http://www.amazon.com/dp/1496034023), adopting some tecniques described there.
+Aside from them, I also have read the machine learning chapters in [The LION Way: Learning plus Intelligent Optimization](http://www.amazon.com/dp/1496034023), adopting some tecniques described there.
 
 ## Contributors
 I am working alone on this project, will add contributors as needed. If you want to help or simply give me a hint, feel free to ask.  
-Mentioning [Alessandro994] (https://github.com/Alessandro994), as he offered to do benchmarks to the past version of the project. It was so unoptimized that my dual core processor was refusing to crunch all the Mnist dataset -.-
+Mentioning [Alessandro994](https://github.com/Alessandro994), as he offered to do benchmarks to the past version of the project. It was so unoptimized that my dual core processor was refusing to crunch all the Mnist dataset -.-
 
 ## License
-This software is under the [MITLicense] (https://opensource.org/licenses/MIT)
+This software is under the [MITLicense](https://opensource.org/licenses/MIT)
 Feel free to modify and redistribute it, but please add a mention to the original code.
 
 ## Kitty
